@@ -25,7 +25,7 @@ class QueueSimulator:
 
     def schedule_event(self, event_time, event_type):
         self.events.append((event_time, event_type))
-        self.events.sort()
+        self.events.sort(key=lambda x: x[0])
 
     def run(self):
         self.schedule_event(2.0, 'A')
