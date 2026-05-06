@@ -1,37 +1,46 @@
-============================================================
-SIMULADOR DE REDE DE FILAS - SEGUNDA ETAPA
-============================================================
+======================================================================
+SIMULADOR DE REDE DE FILAS - TOPOLOGIA COM 3 FILAS
+======================================================================
 
-FILA 1: G/G/2/3
-Parâmetros: 2 servidores, capacidade 3
-Chegadas: uniforme entre 1 e 4
-Atendimento: uniforme entre 3 e 4
+--- Queue Network Results ---
+Total simulated time: 41084.9853
+Customers exited system: 5810
 
---- Results G/G/2/3 ---
-Total time: 125080.0260
-Lost customers: 98
-State    | Accumulated time   | Probability
-0        | 2454.3680          | 1.96%
-1        | 70381.0888         | 56.27%
-2        | 48114.3733         | 38.47%
-3        | 4130.1960          | 3.30%
---------------------------------------------------
-
-============================================================
-
-FILA 2: G/G/1/5
-Parâmetros: 1 servidor, capacidade 5
-Chegadas: uniforme entre 1 e 4 (clientes da Fila 1)
-Atendimento: uniforme entre 2 e 3
-
---- Results G/G/1/5 ---
-Total time: 126176.8146
-Lost customers: 853
-State    | Accumulated time   | Probability
-0        | 2180.9755          | 1.73%
-1        | 22375.6919         | 17.73%
-2        | 32092.0771         | 25.43%
-3        | 32803.3817         | 26.00%
-4        | 28316.8062         | 22.44%
-5        | 8407.8822          | 6.66%
---------------------------------------------------
+Queue Q1 (G/G/1/∞)
+  Lost customers: 0
+  Completed services: 18621
+  State    | Accumulated time   | Probability
+  0        | 13151.4583         | 32.01%
+  1        | 21613.3729         | 52.61%
+  2        | 5812.6250          | 14.15%
+  3        | 490.8866           | 1.19%
+  4        | 16.1024            | 0.04%
+  5        | 0.5402             | 0.00%
+------------------------------------------------------------
+Queue Q2 (G/G/2/5)
+  Lost customers: 4403
+  Completed services: 16303
+  State    | Accumulated time   | Probability
+  0        | 37.7577            | 0.09%
+  1        | 519.8620           | 1.27%
+  2        | 2361.8282          | 5.75%
+  3        | 8686.6585          | 21.14%
+  4        | 16660.8500         | 40.55%
+  5        | 12818.0290         | 31.20%
+------------------------------------------------------------
+Queue Q3 (G/G/2/10)
+  Lost customers: 3474
+  Completed services: 8223
+  State    | Accumulated time   | Probability
+  0        | 9.7106             | 0.02%
+  1        | 2.7607             | 0.01%
+  2        | 4.1705             | 0.01%
+  3        | 22.3126            | 0.05%
+  4        | 85.6898            | 0.21%
+  5        | 275.0143           | 0.67%
+  6        | 913.8708           | 2.22%
+  7        | 2513.3254          | 6.12%
+  8        | 7821.0110          | 19.04%
+  9        | 14431.5624         | 35.13%
+  10       | 15005.5573         | 36.52%
+------------------------------------------------------------

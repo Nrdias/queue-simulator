@@ -1,59 +1,159 @@
-# Queue Simulator - Segunda Etapa
+# Queue Simulator - Simulador de Rede de Filas
 
-Simulador de Rede de Filas desenvolvido em Python para a segunda etapa da disciplina.
+> Desenvolvido por: Bruno Panizzi, Enzo Zortéa, Gustavo Amaro e Natan Dias
+
+Simulador de filas com **eventos discretos** em Python, com suporte a:
+
+- rede de filas com topologia arbitrária,
+- roteamento probabilístico entre filas,
+- laços de realimentação (fila voltando para ela mesma),
+- saída do sistema,
+- semente aleatória para resultados reprodutíveis,
+- capacidade finita **ou infinita** (`capacity=None`).
+
+---
 
 ## Requisitos
 
-- Python 3.x
+- Python 3.8+
+- Nenhuma dependência externa
 
-## Execução
+---
 
-Para executar o simulador e gerar os resultados das simulações:
+## Como executar
 
 ```bash
 python main.py
 ```
 
-## Respostas da Atividade
+O `main.py` atual está configurado com a topologia de 3 filas da atividade.
 
-### 1. Link para o código fonte do grupo:
-```
-/Users/natandias/workspace/queue-simulator
-```
+---
 
-### 2. Fila 1 - G/G/2/3
-**Parâmetros:** 2 servidores, capacidade 3, chegadas uniforme [1..4], atendimento uniforme [3..4]
+## Conceitos do simulador
 
-```
-Total time: 125080.0260
-Lost customers: 98
+### Tipos de evento internos
 
-State Distribution:
-State 0: 2454.3680 (1.96%)
-State 1: 70381.0888 (56.27%)
-State 2: 48114.3733 (38.47%)
-State 3: 4130.1960 (3.30%)
-```
+- `E`: chegada externa
+- `A`: chegada roteada de outra fila
+- `D`: término de serviço (saída da fila)
+- `X`: evento de saída com destino (ou saída do sistema)
 
-### 3. Fila 2 - G/G/1/5
-**Parâmetros:** 1 servidor, capacidade 5, chegadas uniforme [1..4], atendimento uniforme [2..3]
+### Estado de cada fila
 
-```
-Total time: 126176.8146
-Lost customers: 853
+O estado é o número de clientes no sistema da fila (em serviço + esperando).
 
-State Distribution:
-State 0: 2180.9755 (1.73%)
-State 1: 22375.6919 (17.73%)
-State 2: 32092.0771 (25.43%)
-State 3: 32803.3817 (26.00%)
-State 4: 28316.8062 (22.44%)
-State 5: 8407.8822 (6.66%)
+---
+
+## Uso da classe `QueueSimulator`
+
+## 1) Modo rede (recomendado)
+
+### Assinatura relevante
+
+```python
+QueueSimulator(
+    queues=...,                # obrigatório no modo rede
+    routing=...,               # obrigatório no modo rede
+    seed=None,
+    max_random_numbers=100000,
+    initial_external_arrival=2.0,
+)
 ```
 
-## Análise
+### Estrutura de `queues`
 
-- A Fila 1 (G/G/2/3) com 2 servidores e capacidade 3 apresenta uma taxa de perda de apenas 98 clientes em 100.000 tentativas.
-- A Fila 2 (G/G/1/5) com 1 servidor e capacidade 5 apresenta uma taxa de perda significativamente maior (853 clientes), indicando que um único servidor não é suficiente para o fluxo de clientes.
-- Na Fila 1, o sistema passa a maior parte do tempo nos estados 1 e 2 (94.74%), indicando que geralmente há clientes na fila.
-- Na Fila 2, a distribuição é mais dispersa, com concentração nos estados 2 e 3 (51.43%), mostrando maior variabilidade nos estados do sistema.
+`queues` é um dicionário onde cada chave é o nome da fila (`"Q1"`, `"Q2"`, etc):
+
+```python
+queues = {
+    "Q1": {
+        "servers": 1,          # obrigatório
+        "capacity": None,      # None => infinita | int >= 1 => finita
+        "arrival_min": 2.0,    # opcional (se definido junto com arrival_max, gera chegadas externas)
+        "arrival_max": 4.0,    # opcional
+        "service_min": 1.0,    # obrigatório
+        "service_max": 2.0,    # obrigatório
+    },
+    ...
+}
+```
+
+### Estrutura de `routing`
+
+`routing` define, para cada fila de origem, as probabilidades de destino após `D`:
+
+```python
+routing = {
+    "Q1": {"Q2": 0.8, "Q3": 0.2},
+    "Q2": {"Q1": 0.3, "Q3": 0.5, None: 0.2},
+    "Q3": {"Q2": 0.7, None: 0.3},
+}
+```
+
+Regras:
+
+- A soma das probabilidades de cada fila **deve ser 1.0**.
+- `None` significa saída do sistema.
+- É permitido rotear para a própria fila (realimentação), ex: `"Q2": {"Q2": 0.1, None: 0.9}`.
+- Destinos também podem ser informados como `"EXIT"`, `"exit"`, `"OUT"`, `"out"` (normalizados para `None`).
+
+### Fontes externas
+
+Uma fila é fonte externa se **ambos** estiverem definidos:
+
+- `arrival_min`
+- `arrival_max`
+
+Se não estiverem, a fila recebe apenas chegadas roteadas de outras filas.
+
+---
+
+## Parâmetros importantes
+
+- `seed`: fixa a sequência pseudoaleatória (execuções reprodutíveis)
+- `max_random_numbers`: limite de números aleatórios usados na simulação
+- `initial_external_arrival`: instante inicial da primeira chegada externa em cada fila fonte
+
+---
+
+## Capacidade infinita
+
+Para modelar fila sem limite de buffer:
+
+```python
+"capacity": None
+```
+
+No relatório, aparece como `∞`.
+
+---
+
+## Saída do relatório
+
+No modo rede, o relatório mostra:
+
+- tempo total simulado,
+- clientes que saíram do sistema,
+- para cada fila:
+  - perdas por capacidade (`Lost customers`),
+  - atendimentos concluídos,
+  - tempo acumulado por estado,
+  - probabilidade empírica por estado.
+
+---
+
+## Observações de modelagem
+
+- O simulador usa distribuição **uniforme** para intervalos de chegada/serviço (`min..max`).
+- Probabilidades de roteamento são aplicadas com sorteio uniforme em `[0,1)` e verificação por faixa acumulada.
+- A simulação termina quando acaba o orçamento de números aleatórios (`max_random_numbers`) ou não há mais eventos.
+
+---
+
+## Erros comuns
+
+- Probabilidades de roteamento não somam 1.0 para alguma fila.
+- Destino de roteamento aponta para fila inexistente.
+- Fila sem parâmetros obrigatórios (`servers`, `service_min`, `service_max`).
+- `capacity` inválida (deve ser `None` ou inteiro `>= 1`).
