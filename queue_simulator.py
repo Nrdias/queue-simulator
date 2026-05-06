@@ -1,13 +1,24 @@
 import random
 
+
 class QueueSimulator:
-    def __init__(self, servers, capacity, arrival_min, arrival_max, service_min, service_max):
+    def __init__(
+        self,
+        servers,
+        capacity,
+        arrival_min,
+        arrival_max,
+        service_min,
+        service_max,
+        seed=None,
+    ):
         self.servers = servers
         self.capacity = capacity
         self.arrival_min = arrival_min
         self.arrival_max = arrival_max
         self.service_min = service_min
         self.service_max = service_max
+        self.rng = random.Random(seed)
 
         self.randoms_left = 100000
         self.current_time = 0.0
@@ -19,7 +30,7 @@ class QueueSimulator:
     def generate_random_interval(self, min_value, max_value):
         if self.randoms_left > 0:
             self.randoms_left -= 1
-            value = random.random()
+            value = self.rng.random()
             return (max_value - min_value) * value + min_value
         return None
 
@@ -28,7 +39,7 @@ class QueueSimulator:
         self.events.sort(key=lambda x: x[0])
 
     def run(self):
-        self.schedule_event(2.0, 'A')
+        self.schedule_event(2.0, "A")
 
         while self.randoms_left > 0 and self.events:
             event_time, event_type = self.events.pop(0)
@@ -36,26 +47,32 @@ class QueueSimulator:
             self.state_times[self.queue_length] += elapsed_time
             self.current_time = event_time
 
-            if event_type == 'A':
+            if event_type == "A":
                 if self.queue_length < self.capacity:
                     self.queue_length += 1
                     if self.queue_length <= self.servers:
-                        service_time = self.generate_random_interval(self.service_min, self.service_max)
+                        service_time = self.generate_random_interval(
+                            self.service_min, self.service_max
+                        )
                         if service_time is not None:
-                            self.schedule_event(self.current_time + service_time, 'D')
+                            self.schedule_event(self.current_time + service_time, "D")
                 else:
                     self.loss_count += 1
 
-                arrival_interval = self.generate_random_interval(self.arrival_min, self.arrival_max)
+                arrival_interval = self.generate_random_interval(
+                    self.arrival_min, self.arrival_max
+                )
                 if arrival_interval is not None:
-                    self.schedule_event(self.current_time + arrival_interval, 'A')
+                    self.schedule_event(self.current_time + arrival_interval, "A")
 
-            elif event_type == 'D':
+            elif event_type == "D":
                 self.queue_length -= 1
                 if self.queue_length >= self.servers:
-                    service_time = self.generate_random_interval(self.service_min, self.service_max)
+                    service_time = self.generate_random_interval(
+                        self.service_min, self.service_max
+                    )
                     if service_time is not None:
-                        self.schedule_event(self.current_time + service_time, 'D')
+                        self.schedule_event(self.current_time + service_time, "D")
 
     def report(self):
         total_time = sum(self.state_times)
